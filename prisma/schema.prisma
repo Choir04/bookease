@@ -1,0 +1,68 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Service {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String
+  price           Float
+  durationMinutes Int       @default(60)
+  icon            String    @default("Scissors")
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings        Booking[]
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  bookingCode   String        @unique // e.g., BK-202611-984
+  customerName  String
+  customerEmail String
+  customerPhone String
+  date          DateTime      // Booking date (YYYY-MM-DD)
+  startTime     String        // e.g. "10:00"
+  endTime       String        // e.g. "11:00"
+  totalPrice    Float
+  status        BookingStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  serviceId     String
+  service       Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([date, startTime])
+  @@index([customerEmail])
+  @@index([status])
+}
+
+model BusinessSetting {
+  id              String   @id @default("default")
+  businessName    String   @default("BookEase Studio")
+  contactEmail    String   @default("support@bookease.test")
+  contactPhone    String   @default("+62 812-3456-7890")
+  address         String   @default("Jl. Sudirman No. 123, Jakarta")
+  openTime        String   @default("09:00") // 09:00 AM
+  closeTime       String   @default("18:00") // 06:00 PM
+  slotDurationMin Int      @default(60)     // 60 minutes per slot
+  updatedAt       DateTime @updatedAt
+}
+

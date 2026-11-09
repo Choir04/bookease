@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react';
 import { getAvailableSlots, createBooking, TimeSlot } from '@/actions/booking';
 import { formatRupiah } from '@/lib/utils';
-import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle2, AlertCircle, Loader2, Printer, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface ServiceItem {
@@ -105,6 +105,15 @@ export default function BookingForm({
 
   // SUCCESS VIEW
   if (confirmedBooking) {
+    const waMessage = encodeURIComponent(
+      `Halo Admin BookEase, saya telah membuat reservasi:\n\n` +
+      `*Kode Booking:* ${confirmedBooking.bookingCode}\n` +
+      `*Nama:* ${confirmedBooking.customerName}\n` +
+      `*Layanan:* ${confirmedBooking.service?.name}\n` +
+      `*Waktu:* ${confirmedBooking.startTime} - ${confirmedBooking.endTime} WIB\n\n` +
+      `Mohon informasinya jika jadwal sudah terkonfirmasi. Terima kasih!`
+    );
+
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8 text-center max-w-xl mx-auto animate-fade-in">
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -156,23 +165,43 @@ export default function BookingForm({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href={`/check-status?code=${confirmedBooking.bookingCode}`}
-            className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm"
+        {/* ACTION BUTTONS: WHATSAPP & PRINT */}
+        <div className="space-y-3">
+          <a
+            href={`https://wa.me/6281234567890?text=${waMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition shadow-md hover:shadow-emerald-200 flex items-center justify-center gap-2"
           >
-            Lihat Status Booking
-          </Link>
-          <button
-            onClick={() => {
-              setConfirmedBooking(null);
-              setSelectedTime('');
-              setNotes('');
-            }}
-            className="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-200 transition"
-          >
-            Buat Reservasi Baru
-          </button>
+            <MessageCircle className="w-5 h-5" />
+            <span>Konfirmasi ke Admin via WhatsApp</span>
+          </a>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Cetak Tiket</span>
+            </button>
+            <Link
+              href={`/check-status?code=${confirmedBooking.bookingCode}`}
+              className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-xl transition text-sm flex items-center justify-center"
+            >
+              Lihat Status di Sistem
+            </Link>
+            <button
+              onClick={() => {
+                setConfirmedBooking(null);
+                setSelectedTime('');
+                setNotes('');
+              }}
+              className="px-4 py-2.5 text-neutral-500 hover:text-neutral-800 text-sm font-medium transition"
+            >
+              + Buat Baru
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -381,4 +410,3 @@ export default function BookingForm({
     </form>
   );
 }
-

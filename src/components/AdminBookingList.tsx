@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { updateBookingStatus } from '@/actions/booking';
 import { formatRupiah } from '@/lib/utils';
 import { BookingStatus } from '@prisma/client';
-import { Check, X, CheckCheck, Clock, Search, Phone, Mail, Calendar, Loader2 } from 'lucide-react';
+import { Check, X, CheckCheck, Clock, Search, Phone, Mail, Calendar, Loader2, MessageCircle } from 'lucide-react';
 
 interface BookingRecord {
   id: string;
@@ -136,6 +136,22 @@ export default function AdminBookingList({ initialBookings }: { initialBookings:
             ) : (
               filteredBookings.map((b) => {
                 const isLoading = isPending && activeActionId === b.id;
+
+                // Format phone number for WhatsApp URL (convert 08... to 628...)
+                let cleanPhone = b.customerPhone.replace(/\D/g, '');
+                if (cleanPhone.startsWith('0')) {
+                  cleanPhone = '62' + cleanPhone.slice(1);
+                }
+
+                const waReminderMessage = encodeURIComponent(
+                  `Halo Kak ${b.customerName}, kami dari BookEase ingin mengonfirmasi jadwal kunjungan Anda:\n\n` +
+                  `*Kode Booking:* ${b.bookingCode}\n` +
+                  `*Layanan:* ${b.service.name}\n` +
+                  `*Waktu:* ${b.startTime} - ${b.endTime} WIB\n` +
+                  `*Status:* ${b.status}\n\n` +
+                  `Mohon hadir 10 menit sebelum jadwal. Jika ada perubahan mohon kabari kami. Terima kasih!`
+                );
+
                 return (
                   <tr key={b.id} className="hover:bg-neutral-50/70 transition-colors">
                     {/* KODE & LAYANAN */}
@@ -151,8 +167,19 @@ export default function AdminBookingList({ initialBookings }: { initialBookings:
                       <div className="flex items-center gap-1 text-[11px] text-neutral-500">
                         <Mail className="w-3 h-3" /> {b.customerEmail}
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-neutral-500">
+                      <div className="flex items-center gap-2 text-[11px] text-neutral-500">
                         <Phone className="w-3 h-3" /> {b.customerPhone}
+                        {cleanPhone && (
+                          <a
+                            href={`https://wa.me/${cleanPhone}?text=${waReminderMessage}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-0.5 font-semibold"
+                            title="Kirim Pesan WhatsApp"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" /> WA
+                          </a>
+                        )}
                       </div>
                     </td>
 
@@ -225,4 +252,3 @@ export default function AdminBookingList({ initialBookings }: { initialBookings:
     </div>
   );
 }
-
